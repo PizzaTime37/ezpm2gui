@@ -45,7 +45,8 @@ router.get('/:id', (req: Request, res: Response) => {
   try {
     const job = CronJobService.getCronJob(req.params.id);
     if (!job) {
-      return res.status(404).json({ success: false, error: 'Cron job not found' });
+      res.status(404).json({ success: false, error: 'Cron job not found' });
+      return;
     }
     res.json({ success: true, data: job });
   } catch (error: any) {
@@ -64,25 +65,28 @@ router.post('/', async (req: Request, res: Response) => {
     
     // Validate required fields
     if (!config.name || !config.scriptType || !config.cronExpression) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: name, scriptType, cronExpression'
       });
+      return;
     }
 
     // Validate script mode specific requirements
     if (config.scriptMode === 'file' && !config.scriptPath) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Script path is required when using file mode'
       });
+      return;
     }
 
     if (config.scriptMode === 'inline' && !config.inlineScript) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Inline script content is required when using inline mode'
       });
+      return;
     }
 
     const job = await CronJobService.createCronJob(config);
@@ -173,7 +177,8 @@ router.post('/validate', (req: Request, res: Response) => {
     const { expression } = req.body;
     
     if (!expression) {
-      return res.status(400).json({ success: false, error: 'Expression is required' });
+      res.status(400).json({ success: false, error: 'Expression is required' });
+      return;
     }
 
     const validation = CronJobService.validateCronExpression(expression);

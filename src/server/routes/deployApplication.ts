@@ -25,10 +25,12 @@ router.post('/', async (req, res) => {
 
   // Validate required fields before starting SSE
   if (!name || !script) {
-    return res.status(400).json({ error: 'Name and script path are required' });
+    res.status(400).json({ error: 'Name and script path are required' });
+    return;
   }
   if (!fs.existsSync(script)) {
-    return res.status(400).json({ error: `Script file not found: ${script}` });
+    res.status(400).json({ error: `Script file not found: ${script}` });
+    return;
   }
 
   // Switch to SSE
@@ -146,7 +148,8 @@ router.post('/generate-ecosystem', (req, res) => {
   pm2.connect(async (err) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: 'Failed to connect to PM2' });
+      res.status(500).json({ error: 'Failed to connect to PM2' });
+      return;
     }
     
     try {
@@ -213,7 +216,8 @@ router.get('/generate-ecosystem-preview', (req, res) => {
   pm2.connect(async (err) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: 'Failed to connect to PM2' });
+      res.status(500).json({ error: 'Failed to connect to PM2' });
+      return;
     }
     
     try {
@@ -269,11 +273,13 @@ router.post('/detect-project', (req, res) => {
   const { projectPath } = req.body;
   
   if (!projectPath) {
-    return res.status(400).json({ error: 'Project path is required' });
+    res.status(400).json({ error: 'Project path is required' });
+    return;
   }
   
   if (!fs.existsSync(projectPath)) {
-    return res.status(400).json({ error: 'Project path does not exist' });
+    res.status(400).json({ error: 'Project path does not exist' });
+    return;
   }
   
   try {
@@ -302,11 +308,13 @@ router.post('/setup-project', async (req, res) => {
   const { projectPath, projectType } = req.body;
   
   if (!projectPath || !projectType) {
-    return res.status(400).json({ error: 'Project path and type are required' });
+    res.status(400).json({ error: 'Project path and type are required' });
+    return;
   }
   
   if (!fs.existsSync(projectPath)) {
-    return res.status(400).json({ error: 'Project path does not exist' });
+    res.status(400).json({ error: 'Project path does not exist' });
+    return;
   }
   
   try {

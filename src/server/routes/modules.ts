@@ -79,12 +79,14 @@ router.post('/install', async (req, res) => {
   const { moduleName } = req.body;
 
   if (!moduleName) {
-    return res.status(400).json({ error: 'Module name is required' });
+    res.status(400).json({ error: 'Module name is required' });
+    return;
   }
 
   // Basic validation — only allow alphanumeric, @, /, -, .
   if (!/^[@a-zA-Z0-9/_\-.]+$/.test(moduleName)) {
-    return res.status(400).json({ error: 'Invalid module name' });
+    res.status(400).json({ error: 'Invalid module name' });
+    return;
   }
 
   try {
@@ -107,12 +109,14 @@ router.delete('/:moduleName', async (req, res) => {
   const { moduleName } = req.params;
 
   if (!moduleName) {
-    return res.status(400).json({ error: 'Module name is required' });
+    res.status(400).json({ error: 'Module name is required' });
+    return;
   }
 
   // Basic validation
   if (!/^[@a-zA-Z0-9/_\-.]+$/.test(moduleName)) {
-    return res.status(400).json({ error: 'Invalid module name' });
+    res.status(400).json({ error: 'Invalid module name' });
+    return;
   }
 
   try {
@@ -137,12 +141,14 @@ const moduleConfPath = () => path.join(os.homedir(), '.pm2', 'module_conf.json')
 router.get('/:moduleName/config', (req, res) => {
   const { moduleName } = req.params;
   if (!/^[@a-zA-Z0-9/_\-.]+$/.test(moduleName)) {
-    return res.status(400).json({ error: 'Invalid module name' });
+    res.status(400).json({ error: 'Invalid module name' });
+    return;
   }
 
   const confFile = moduleConfPath();
   if (!fs.existsSync(confFile)) {
-    return res.json({ config: {} });
+    res.json({ config: {} });
+    return;
   }
 
   try {
@@ -161,16 +167,19 @@ router.put('/:moduleName/config', async (req, res) => {
   const { config } = req.body as { config: Record<string, string> };
 
   if (!/^[@a-zA-Z0-9/_\-.]+$/.test(moduleName)) {
-    return res.status(400).json({ error: 'Invalid module name' });
+    res.status(400).json({ error: 'Invalid module name' });
+    return;
   }
   if (!config || typeof config !== 'object') {
-    return res.status(400).json({ error: 'config object is required' });
+    res.status(400).json({ error: 'config object is required' });
+    return;
   }
 
   // Validate all keys — no shell metacharacters
   for (const key of Object.keys(config)) {
     if (!/^[a-zA-Z0-9_\-.]+$/.test(key)) {
-      return res.status(400).json({ error: `Invalid config key: ${key}` });
+      res.status(400).json({ error: `Invalid config key: ${key}` });
+      return;
     }
   }
 

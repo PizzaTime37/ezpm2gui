@@ -11,7 +11,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": false,
-    "allowJs": true
+    "allowJs": true,
+    "types": ["node"]
   },
   "include": ["bin/*.ts"],
   "exclude": ["node_modules", "dist", "src"]

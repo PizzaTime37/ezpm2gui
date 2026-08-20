@@ -48,7 +48,8 @@ router.patch('/settings', (req: Request, res: Response) => {
 
   const config = loadAuthConfig();
   if (!config) {
-    return res.status(400).json({ success: false, error: 'No password set — configure a password first' });
+    res.status(400).json({ success: false, error: 'No password set — configure a password first' });
+    return;
   }
 
   const minutes = typeof autoLockMinutes === 'number' && autoLockMinutes >= 0 ? Math.floor(autoLockMinutes) : config.autoLockMinutes ?? 0;
@@ -62,7 +63,8 @@ router.post('/set', (req: Request, res: Response) => {
   const { password, currentPassword } = req.body as { password?: string; currentPassword?: string };
 
   if (!password || typeof password !== 'string' || password.length < 4) {
-    return res.status(400).json({ success: false, error: 'Password must be at least 4 characters' });
+    res.status(400).json({ success: false, error: 'Password must be at least 4 characters' });
+    return;
   }
 
   const existing = loadAuthConfig();
@@ -70,12 +72,14 @@ router.post('/set', (req: Request, res: Response) => {
   // If a password is already set, require the current one before changing
   if (existing) {
     if (!currentPassword) {
-      return res.status(401).json({ success: false, error: 'Current password required to change password' });
+      res.status(401).json({ success: false, error: 'Current password required to change password' });
+      return;
     }
     const currentHash = hashPassword(currentPassword, existing.salt);
     if (!timingSafeHexEqual(currentHash, existing.hash)) {
       authLimiter.recordFailure(clientKey(req));
-      return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+      res.status(401).json({ success: false, error: 'Current password is incorrect' });
+      return;
     }
   }
 
@@ -101,19 +105,22 @@ router.post('/verify', (req: Request, res: Response) => {
   const { password } = req.body as { password?: string };
 
   if (!password || typeof password !== 'string') {
-    return res.status(400).json({ success: false, error: 'Password is required' });
+    res.status(400).json({ success: false, error: 'Password is required' });
+    return;
   }
 
   const config = loadAuthConfig();
   if (!config) {
     // No password set — treat as unlocked
-    return res.json({ success: true, token: issueToken() });
+    res.json({ success: true, token: issueToken() });
+    return;
   }
 
   const hash = hashPassword(password, config.salt);
   if (!timingSafeHexEqual(hash, config.hash)) {
     authLimiter.recordFailure(clientKey(req));
-    return res.status(401).json({ success: false, error: 'Incorrect password' });
+    res.status(401).json({ success: false, error: 'Incorrect password' });
+    return;
   }
 
   authLimiter.recordSuccess(clientKey(req));
@@ -127,17 +134,20 @@ router.delete('/remove', (req: Request, res: Response) => {
 
   const config = loadAuthConfig();
   if (!config) {
-    return res.json({ success: true }); // nothing to remove
+    res.json({ success: true });
+    return; // nothing to remove
   }
 
   if (!password || typeof password !== 'string') {
-    return res.status(400).json({ success: false, error: 'Current password required' });
+    res.status(400).json({ success: false, error: 'Current password required' });
+    return;
   }
 
   const hash = hashPassword(password, config.salt);
   if (!timingSafeHexEqual(hash, config.hash)) {
     authLimiter.recordFailure(clientKey(req));
-    return res.status(401).json({ success: false, error: 'Incorrect password' });
+    res.status(401).json({ success: false, error: 'Incorrect password' });
+    return;
   }
 
   authLimiter.recordSuccess(clientKey(req));
@@ -152,12 +162,14 @@ router.post('/pin/set', (req: Request, res: Response) => {
   const { pin } = req.body as { pin?: string };
 
   if (!pin || !/^\d{4}$/.test(pin)) {
-    return res.status(400).json({ success: false, error: 'PIN must be exactly 4 digits' });
+    res.status(400).json({ success: false, error: 'PIN must be exactly 4 digits' });
+    return;
   }
 
   const config = loadAuthConfig();
   if (!config) {
-    return res.status(400).json({ success: false, error: 'Set a password first before adding a PIN' });
+    res.status(400).json({ success: false, error: 'Set a password first before adding a PIN' });
+    return;
   }
 
   const pinSalt = crypto.randomBytes(32).toString('hex');
@@ -172,18 +184,21 @@ router.post('/pin/verify', (req: Request, res: Response) => {
   const { pin } = req.body as { pin?: string };
 
   if (!pin || typeof pin !== 'string') {
-    return res.status(400).json({ success: false, error: 'PIN is required' });
+    res.status(400).json({ success: false, error: 'PIN is required' });
+    return;
   }
 
   const config = loadAuthConfig();
   if (!config?.pinHash || !config?.pinSalt) {
-    return res.status(400).json({ success: false, error: 'No PIN configured' });
+    res.status(400).json({ success: false, error: 'No PIN configured' });
+    return;
   }
 
   const hash = hashPassword(pin, config.pinSalt);
   if (!timingSafeHexEqual(hash, config.pinHash)) {
     authLimiter.recordFailure(clientKey(req));
-    return res.status(401).json({ success: false, error: 'Incorrect PIN' });
+    res.status(401).json({ success: false, error: 'Incorrect PIN' });
+    return;
   }
 
   authLimiter.recordSuccess(clientKey(req));
@@ -197,17 +212,20 @@ router.delete('/pin/remove', (req: Request, res: Response) => {
 
   const config = loadAuthConfig();
   if (!config) {
-    return res.json({ success: true }); // nothing to remove
+    res.json({ success: true });
+    return; // nothing to remove
   }
 
   if (!password || typeof password !== 'string') {
-    return res.status(400).json({ success: false, error: 'Current password required to remove PIN' });
+    res.status(400).json({ success: false, error: 'Current password required to remove PIN' });
+    return;
   }
 
   const hash = hashPassword(password, config.salt);
   if (!timingSafeHexEqual(hash, config.hash)) {
     authLimiter.recordFailure(clientKey(req));
-    return res.status(401).json({ success: false, error: 'Incorrect password' });
+    res.status(401).json({ success: false, error: 'Incorrect password' });
+    return;
   }
 
   authLimiter.recordSuccess(clientKey(req));

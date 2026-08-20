@@ -54,10 +54,11 @@ router.post('/:connectionId/connect', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     // Establish the SSH connection only — PM2 detection happens lazily
@@ -105,10 +106,11 @@ router.post('/connect', async (req, res) => {
     
     // Validate required fields
     if (!connectionConfig.host || !connectionConfig.username) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required connection parameters'
       });
+      return;
     }
     
     // Ensure port is set
@@ -118,10 +120,11 @@ router.post('/connect', async (req, res) => {
     
     // Validate authentication method
     if (!connectionConfig.password && !connectionConfig.privateKey) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'No authentication method provided (password or privateKey)'
       });
+      return;
     }
     
     // Create the connection
@@ -129,10 +132,11 @@ router.post('/connect', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: 'Failed to create connection'
       });
+      return;
     }
     
     // Test the connection
@@ -171,10 +175,11 @@ router.post('/disconnect', async (req, res) => {
     const { connectionId } = req.body;
     
     if (!connectionId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing connectionId parameter'
       });
+      return;
     }
     
     const success = await remoteConnectionManager.closeConnection(connectionId);
@@ -200,10 +205,11 @@ router.get('/pm2/list/:connectionId', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
       try {
       const processes = await connection.getPM2Processes();
@@ -233,10 +239,11 @@ router.get('/pm2/info/:connectionId/:processId', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
       try {
       // Find process in the list of processes
@@ -244,10 +251,11 @@ router.get('/pm2/info/:connectionId/:processId', async (req, res) => {
       const process = processes.find(p => p.pm_id.toString() === processId);
       
       if (!process) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: 'Process not found'
         });
+        return;
       }
       
       res.json({
@@ -280,10 +288,11 @@ router.post('/pm2/action/:connectionId/:action', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     let result;
@@ -303,10 +312,11 @@ router.post('/pm2/action/:connectionId/:action', async (req, res) => {
           result = await connection.deletePM2Process(processId);
           break;
         default:
-          return res.status(400).json({
+          res.status(400).json({
             success: false,
             error: `Unknown action: ${action}`
           });
+          return;
       }
       
       res.json({
@@ -337,10 +347,11 @@ router.get('/:connectionId/processes', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     try {
@@ -370,10 +381,11 @@ router.post('/:connectionId/processes/:processName/:action', async (req, res) =>
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     try {
@@ -393,10 +405,11 @@ router.post('/:connectionId/processes/:processName/:action', async (req, res) =>
           result = await connection.deletePM2Process(processName);
           break;
         default:
-          return res.status(400).json({
+          res.status(400).json({
             success: false,
             error: `Invalid action: ${action}`
           });
+          return;
       }
       
       res.json({
@@ -427,10 +440,11 @@ router.get('/:connectionId/system-info', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     try {
@@ -462,10 +476,11 @@ router.get('/pm2/logs/:connectionId/:processId', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     try {
@@ -499,10 +514,11 @@ router.get('/system/:connectionId', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     try {
@@ -536,27 +552,30 @@ router.get('/:connectionId/logs/:processId', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
 
     if (!connection.isConnected()) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Connection not established'
       });
+      return;
     }
 
     // Get log paths from PM2 process info — use the PATH-fallback executor so
     // pm2 is found regardless of the remote shell environment (nvm, npm-global, etc.)
     const processInfoResult = await connection.executePM2Command('jlist');
     if (processInfoResult.code !== 0) {
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: 'Failed to get PM2 process list'
       });
+      return;
     }
 
     let processInfo;
@@ -570,16 +589,18 @@ router.get('/:connectionId/logs/:processId', async (req, res) => {
       processInfo = processList.find((p: any) => p.pm_id === parseInt(processId, 10) || p.name === processId);
 
       if (!processInfo) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: 'Process not found'
         });
+        return;
       }
     } catch (parseError) {
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: 'Failed to parse PM2 process list'
       });
+      return;
     }
 
     const outLogPath = processInfo.pm2_env?.pm_out_log_path;
@@ -664,11 +685,14 @@ router.get('/:connectionId/logs/:processId/:type', async (req, res) => {
     const lines = safeLogLines(req.query.lines as string | undefined);
 
     const connection = remoteConnectionManager.getConnection(connectionId);
-    if (!connection) return res.status(404).json({ success: false, error: 'Connection not found' });
-    if (!connection.isConnected()) return res.status(400).json({ success: false, error: 'Not connected' });
+    if (!connection) res.status(404).json({ success: false, error: 'Connection not found' });
+    return;
+    if (!connection.isConnected()) res.status(400).json({ success: false, error: 'Not connected' });
+    return;
 
     const { logPath, error } = await resolveRemoteLogPath(connection, processId, logType);
-    if (!logPath) return res.status(404).json({ success: false, error: error || 'Log path not found' });
+    if (!logPath) res.status(404).json({ success: false, error: error || 'Log path not found' });
+    return;
 
     // tail -n 0 = all lines; use wc -l to get total count alongside
     const lineArg = lines === 0 ? '+1' : `-${lines}`;
@@ -701,11 +725,14 @@ router.get('/:connectionId/logs/:processId/:type/download', async (req, res) => 
     const logType = type === 'err' ? 'err' : 'out';
 
     const connection = remoteConnectionManager.getConnection(connectionId);
-    if (!connection) return res.status(404).json({ success: false, error: 'Connection not found' });
-    if (!connection.isConnected()) return res.status(400).json({ success: false, error: 'Not connected' });
+    if (!connection) res.status(404).json({ success: false, error: 'Connection not found' });
+    return;
+    if (!connection.isConnected()) res.status(400).json({ success: false, error: 'Not connected' });
+    return;
 
     const { logPath, error } = await resolveRemoteLogPath(connection, processId, logType);
-    if (!logPath) return res.status(404).json({ success: false, error: error || 'Log path not found' });
+    if (!logPath) res.status(404).json({ success: false, error: error || 'Log path not found' });
+    return;
 
     const fileName = `${processId}-${logType}.log`;
     await connection.streamFileToResponse(logPath, res, fileName);
@@ -727,15 +754,18 @@ router.get('/:connectionId/log-files/:processId', async (req, res) => {
     const { connectionId, processId } = req.params;
 
     const connection = remoteConnectionManager.getConnection(connectionId);
-    if (!connection) return res.status(404).json({ success: false, error: 'Connection not found' });
-    if (!connection.isConnected()) return res.status(400).json({ success: false, error: 'Not connected' });
+    if (!connection) res.status(404).json({ success: false, error: 'Connection not found' });
+    return;
+    if (!connection.isConnected()) res.status(400).json({ success: false, error: 'Not connected' });
+    return;
 
     // Resolve both log paths so we know the directory and base name
     const { logPath: outPath } = await resolveRemoteLogPath(connection, processId, 'out');
     const { logPath: errPath } = await resolveRemoteLogPath(connection, processId, 'err');
 
     if (!outPath && !errPath) {
-      return res.status(404).json({ success: false, error: 'No log paths found for this process' });
+      res.status(404).json({ success: false, error: 'No log paths found for this process' });
+      return;
     }
 
     // Derive log directory + base name from the out log path (or err if out missing)
@@ -806,16 +836,20 @@ router.get('/:connectionId/log-file', async (req, res) => {
     const filePath = req.query.path as string;
     const lines    = safeLogLines(req.query.lines as string | undefined);
 
-    if (!filePath) return res.status(400).json({ error: 'path query parameter required' });
+    if (!filePath) res.status(400).json({ error: 'path query parameter required' });
+    return;
 
     // Strict path validation — blocks traversal, shell metacharacters, and non-log extensions
     if (!validateRemotePath(filePath)) {
-      return res.status(403).json({ error: 'Access denied: invalid or unsafe log file path' });
+      res.status(403).json({ error: 'Access denied: invalid or unsafe log file path' });
+      return;
     }
 
     const connection = remoteConnectionManager.getConnection(connectionId);
-    if (!connection) return res.status(404).json({ success: false, error: 'Connection not found' });
-    if (!connection.isConnected()) return res.status(400).json({ success: false, error: 'Not connected' });
+    if (!connection) res.status(404).json({ success: false, error: 'Connection not found' });
+    return;
+    if (!connection.isConnected()) res.status(400).json({ success: false, error: 'Not connected' });
+    return;
 
     const isGz     = filePath.endsWith('.gz');
     const catCmd   = isGz ? `zcat "${filePath}" 2>/dev/null` : `cat "${filePath}" 2>/dev/null`;
@@ -853,14 +887,18 @@ router.get('/:connectionId/log-file/download', async (req, res) => {
     const { connectionId } = req.params;
     const filePath = req.query.path as string;
 
-    if (!filePath) return res.status(400).json({ error: 'path query parameter required' });
+    if (!filePath) res.status(400).json({ error: 'path query parameter required' });
+    return;
     if (!validateRemotePath(filePath)) {
-      return res.status(403).json({ error: 'Access denied: invalid or unsafe log file path' });
+      res.status(403).json({ error: 'Access denied: invalid or unsafe log file path' });
+      return;
     }
 
     const connection = remoteConnectionManager.getConnection(connectionId);
-    if (!connection) return res.status(404).json({ success: false, error: 'Connection not found' });
-    if (!connection.isConnected()) return res.status(400).json({ success: false, error: 'Not connected' });
+    if (!connection) res.status(404).json({ success: false, error: 'Connection not found' });
+    return;
+    if (!connection.isConnected()) res.status(400).json({ success: false, error: 'Not connected' });
+    return;
 
     // .gz files: stream via SFTP + local gunzip (no server-side memory buffering)
     if (filePath.endsWith('.gz')) {
@@ -919,10 +957,11 @@ router.post('/connections', (req, res) => {
     const body = req.body;
 
     if (!body.name || !body.host || !body.username) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required connection parameters: name, host, or username'
       });
+      return;
     }
 
     // Decrypt sensitive fields that may have been encrypted by the client
@@ -960,10 +999,11 @@ router.put('/connections/:connectionId', async (req, res) => {
     const body = req.body;
 
     if (!body.name || !body.host || !body.username) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required connection parameters: name, host, or username'
       });
+      return;
     }
 
     // Decrypt sensitive fields that may have been encrypted by the client
@@ -979,10 +1019,11 @@ router.put('/connections/:connectionId', async (req, res) => {
     const success = await remoteConnectionManager.updateConnection(connectionId, connectionConfig);
     
     if (!success) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     res.json({
@@ -1012,10 +1053,11 @@ router.delete('/connections/:connectionId', async (req, res) => {
     const success = remoteConnectionManager.deleteConnection(connectionId);
     
     if (!success) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     res.json({
@@ -1040,10 +1082,11 @@ router.post('/:connectionId/install-pm2', async (req, res) => {
     const connection = remoteConnectionManager.getConnection(connectionId);
     
     if (!connection) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Connection not found'
       });
+      return;
     }
     
     // Install PM2
